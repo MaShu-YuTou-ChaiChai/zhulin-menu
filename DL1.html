@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>竹林雞肉(中華店) - 同事線上點餐系統 (完整防呆版)</title>
+  <style>
+    :root {
+      --primary-color: #d97706;
+      --primary-hover: #b45309;
+      --bg-color: #f3f4f6;
+      --card-bg: #ffffff;
+      --text-color: #1f2937;
+      --border-color: #e5e7eb;
+      --danger-color: #ef4444;
+      --success-color: #10b981;
+    }
+    
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      touch-action: manipulation;
+    }
+    
+    html { scroll-behavior: smooth; }
+    body { background-color: var(--bg-color); color: var(--text-color); padding-bottom: 90px; }
+    
+    .header { background-color: var(--primary-color); color: white; padding: 1rem; text-align: center; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .header h1 { font-size: 1.3rem; margin-bottom: 0.2rem; }
+    .header .store-info { font-size: 0.9rem; font-weight: bold; margin-top: 0.1rem; opacity: 0.95; }
+    .admin-btn { position: absolute; right: 1rem; top: 0.8rem; background: rgba(255,255,255,0.2); color: white; border: 1px solid white; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer; }
+    
+    .category-nav { display: flex; overflow-x: auto; white-space: nowrap; background: white; padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 90; box-shadow: 0 2px 4px rgba(0,0,0,0.05); gap: 0.4rem; }
+    .category-nav::-webkit-scrollbar { height: 4px; }
+    .category-nav::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .nav-tag { display: inline-block; padding: 0.35rem 0.7rem; background: #f1f5f9; color: #475569; border-radius: 16px; font-size: 0.8rem; font-weight: bold; text-decoration: none; border: 1px solid #e2e8f0; transition: all 0.2s; }
+    .nav-tag:hover, .nav-tag:active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+
+    .nav-tabs { display: flex; background: white; border-bottom: 1px solid var(--border-color); }
+    .tab-btn { flex: 1; padding: 0.8rem; text-align: center; font-weight: bold; font-size: 0.95rem; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; }
+    .tab-btn.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+
+    .container { max-width: 600px; margin: 1rem auto; padding: 0 1rem; }
+    .card { background: var(--card-bg); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .card h2 { font-size: 1.05rem; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem; }
+    
+    .time-banner { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 0.6rem 1rem; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1rem; text-align: center; font-weight: bold; }
+    .time-banner.closed { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+
+    .form-group { margin-bottom: 0.8rem; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.3rem; }
+    .form-group input { width: 100%; padding: 0.6rem; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.95rem; }
+
+    .menu-item { display: flex; flex-direction: column; padding: 0.7rem 0; border-bottom: 1px solid var(--border-color); }
+    .menu-item:last-child { border-bottom: none; }
+    .item-main { display: flex; justify-content: space-between; align-items: center; }
+    .item-info { flex: 1; }
+    .item-name { font-weight: bold; font-size: 0.95rem; }
+    .item-price { color: #6b7280; font-size: 0.85rem; margin-top: 0.1rem; }
+    
+    .item-options { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
+    .item-options label { font-size: 0.8rem; color: #4b5563; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+    
+    .item-remark-input { margin-top: 6px; }
+    .item-remark-input input { width: 100%; padding: 0.4rem; font-size: 0.8rem; border: 1px solid var(--border-color); border-radius: 4px; }
+    
+    .disabled-option { opacity: 0.4; pointer-events: none; }
+
+    .quantity-control { display: flex; align-items: center; gap: 0.6rem; }
+    .btn-qty { 
+      width: 42px; 
+      height: 42px; 
+      border-radius: 8px; 
+      border: 1px solid #cbd5e1; 
+      background: #f8fafc; 
+      font-size: 1.4rem; 
+      font-weight: bold; 
+      color: #334155; 
+      cursor: pointer; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent; 
+    }
+    .btn-qty:active { background: #e2e8f0; border-color: #94a3b8; }
+    .qty-display { font-weight: bold; min-width: 24px; text-align: center; font-size: 1.1rem; }
+
+    .footer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 0.8rem 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; max-width: 600px; margin: 0 auto; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; }
+    .total-price { font-size: 1.1rem; font-weight: bold; }
+    .total-price span { color: var(--primary-color); }
+    .btn-submit { background: var(--primary-color); color: white; border: none; padding: 0.7rem 1.4rem; border-radius: 6px; font-weight: bold; font-size: 0.95rem; cursor: pointer; }
+    .btn-submit:disabled { background: #9ca3af; cursor: not-allowed; }
+
+    .back-to-top { position: fixed; bottom: 85px; right: 20px; background: rgba(217, 119, 6, 0.9); color: white; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.15); z-index: 99; transition: opacity 0.3s, background 0.2s; opacity: 0; pointer-events: none; }
+    .back-to-top.show { opacity: 1; pointer-events: auto; }
+
+    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 1rem; }
+    .modal.active { display: flex; }
+    .modal-content { background: white; border-radius: 8px; width: 100%; max-width: 550px; max-height: 85vh; overflow-y: auto; padding: 1.2rem; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
+    .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem; }
+    .stat-box { background: #f9fafb; padding: 0.6rem; border-radius: 6px; border: 1px solid var(--border-color); text-align: center; }
+    .stat-box div:first-child { font-size: 0.75rem; color: #6b7280; }
+    .stat-box div:last-child { font-size: 1.05rem; font-weight: bold; color: var(--primary-color); }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.8rem; }
+    th, td { border: 1px solid var(--border-color); padding: 0.4rem; text-align: left; }
+    th { background: #f9fafb; }
+    .btn-action { background: #3b82f6; color: white; border: none; padding: 0.4rem 0.6rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; margin-right: 0.3rem; margin-top: 0.4rem; }
+    .btn-danger { background: var(--danger-color); }
+    .btn-success { background: var(--success-color); }
+
+    .order-card { border: 1px solid var(--border-color); border-radius: 6px; padding: 0.8rem; margin-bottom: 0.8rem; background: #fafafa; }
+    .order-card-header { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 0.5rem; border-bottom: 1px dashed #ccc; padding-bottom: 0.3rem; }
+    .cancel-item-btn { color: var(--danger-color); border: 1px solid var(--danger-color); background: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; float: right; }
+    
+    .loading-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); z-index: 2000; align-items: center; justify-content: center; font-weight: bold; color: var(--primary-color); }
+    .loading-overlay.active { display: flex; }
+
+    .confirm-summary-list { background: #f9fafb; padding: 0.8rem; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 1rem; font-size: 0.9rem; max-height: 200px; overflow-y: auto; }
+    .confirm-summary-item { margin-bottom: 0.4rem; border-bottom: 1px dashed #e5e7eb; padding-bottom: 0.3rem; }
+  </style>
+</head>
+<body>
+
+  <div class="loading-overlay" id="loadingOverlay">☁️ 雲端資料同步中，請稍候...</div>
+
+  <div class="header">
+    <h1>竹林雞肉 (中華店)</h1>
+    <div class="store-info">📞 訂餐電話：02-8992-0789</div>
+    <button class="admin-btn" onclick="openAdminModal()">管理員</button>
+  </div>
+
+  <div class="category-nav" id="categoryNav"></div>
+
+  <div class="nav-tabs">
+    <button class="tab-btn active" id="tabOrder" onclick="switchTab('order')">✍️ 我要點餐</button>
+    <button class="tab-btn" id="tabCancel" onclick="switchTab('cancel')">❌ 取消訂單 / 🔍 查詢訂單</button>
+  </div>
+
+  <div class="container">
+    <div id="timeBanner" class="time-banner">⏳ 載入雲端設定中...</div>
+
+    <!-- 點餐頁面 -->
+    <div id="pageOrder">
+      <div class="card">
+        <h2>1. 基本資料</h2>
+        <div class="form-group">
+          <label>姓名 *</label>
+          <input type="text" id="userName" placeholder="請輸入姓名">
+        </div>
+        <div class="form-group">
+          <label>部門 *</label>
+          <input type="text" id="userDept" placeholder="請輸入部門">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>2. 選擇餐點</h2>
+        <div id="menuList"></div>
+      </div>
+    </div>
+
+    <!-- 查詢與取消訂單頁面 -->
+    <div id="pageCancel" style="display: none;">
+      <div class="card">
+        <h2>🔍 查詢或取消已點餐點</h2>
+        <div class="form-group">
+          <label>姓名 *</label>
+          <input type="text" id="cancelName" placeholder="請輸入點餐時的姓名">
+        </div>
+        <div class="form-group">
+          <label>部門 *</label>
+          <input type="text" id="cancelDept" placeholder="請輸入點餐時的部門">
+        </div>
+        <button class="btn-submit" style="width: 100%; margin-top: 0.5rem;" onclick="searchUserOrder()">搜尋我的雲端點餐紀錄</button>
+      </div>
+
+      <div id="userOrderResult"></div>
+    </div>
+  </div>
+
+  <div class="footer-bar" id="footerBar">
+    <div class="total-price">合計：$<span id="grandTotal">0</span></div>
+    <button class="btn-submit" id="btnSubmitOrder" disabled onclick="openConfirmModal()">確認送出點餐</button>
+  </div>
+
+  <a href="#" class="back-to-top" id="backToTopBtn">TOP</a>
+
+  <!-- 訂單送出前二次確認彈窗 -->
+  <div class="modal" id="confirmOrderModal">
+    <div class="modal-content" style="max-width:400px;">
+      <div class="modal-header">
+        <h3>請確認您的點餐內容</h3>
+        <button class="close-btn" onclick="closeConfirmModal()">&times;</button>
+      </div>
+      <div style="font-size:0.9rem; margin-bottom:0.6rem;">
+        <div>訂購人：<strong id="confirmUserName"></strong> (<span id="confirmUserDept"></span>)</div>
+      </div>
+      <div class="confirm-summary-list" id="confirmSummaryList"></div>
+      <div style="font-size:1.1rem; font-weight:bold; margin-bottom:1rem; text-align:right;">
+        總計金額：<span style="color:var(--primary-color);" id="confirmGrandTotal">$0</span>
+      </div>
+      <div style="display:flex; gap:0.5rem;">
+        <button class="btn-action" style="flex:1; background:#6b7280; padding:0.7rem; font-size:0.9rem;" onclick="closeConfirmModal()">繼續點餐 (回去修改)</button>
+        <button class="btn-action btn-success" style="flex:1; padding:0.7rem; font-size:0.9rem; font-weight:bold;" onclick="submitOrder()">確認送出</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 管理員密碼驗證彈窗 -->
+  <div class="modal" id="adminAuthModal">
+    <div class="modal-content" style="max-width:320px;">
+      <div class="modal-header">
+        <h3>管理員驗證</h3>
+        <button class="close-btn" onclick="closeAdminAuthModal()">&times;</button>
+      </div>
+      <div class="form-group">
+        <label>請輸入管理員密碼</label>
+        <input type="password" id="adminPasswordInput" placeholder="請輸入密碼">
+      </div>
+      <button class="btn-submit" style="width:100%;" onclick="verifyAdminPassword()">登入</button>
+    </div>
+  </div>
+
+  <!-- 管理員後台彈窗 -->
+  <div class="modal" id="adminModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>管理員後台數據與開關設定</h3>
+        <button class="close-btn" onclick="closeAdminModal()">&times;</button>
+      </div>
+      
+      <div style="margin-bottom: 1rem; background:#fef3c7; border:1px solid #f59e0b; padding:0.8rem; border-radius:6px;">
+        <div style="font-weight:bold; font-size:0.9rem; margin-bottom:0.4rem; color:#b45309;">🛠️ 測試與填單開關控制：</div>
+        <div style="font-size:0.8rem; color:#78350f; margin-bottom:0.5rem;">當前雲端狀態：<span id="adminToggleStatus" style="font-weight:bold;">檢查中...</span></div>
+        <button class="btn-action btn-success" onclick="setManualOverride('open')">🟢 強制開啟填單 (測試用)</button>
+        <button class="btn-action btn-danger" onclick="setManualOverride('close')">🔴 強制關閉填單</button>
+        <button class="btn-action" style="background:#6b7280;" onclick="setManualOverride('auto')">🔄 恢復依 10:30 自動判定</button>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-box">
+          <div>不重複人數</div>
+          <div id="statUsers">0 人</div>
+        </div>
+        <div class="stat-box">
+          <div>全天總金額</div>
+          <div id="statTotalAmount">$0</div>
+        </div>
+        <div class="stat-box">
+          <div>結算狀態</div>
+          <div id="statStageStatus" style="font-size:0.85rem; color:#d97706;">第1單進行中</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 0.8rem; background:#edf2f7; padding:0.6rem; border-radius:6px;">
+        <div style="font-weight:bold; font-size:0.85rem; margin-bottom:0.4rem;">階段結算與導出操作：</div>
+        <button class="btn-action btn-success" onclick="settleBatch(1)">關閉/結算【第1單】</button>
+        <button class="btn-action btn-success" onclick="settleBatch(2)">關閉/結算【第2單】</button>
+        <button class="btn-action btn-success" onclick="settleBatch(3)">關閉/結算【第3單】(今日最終)</button>
+        <button class="btn-action" onclick="copyBatchSummary(1)">複製 第 1 單 LINE 訊息</button>
+        <button class="btn-action" onclick="copyBatchSummary(2)">複製 第 2 單 LINE 訊息</button>
+        <button class="btn-action" onclick="copyBatchSummary(3)">複製 第 3 單 LINE 訊息</button>
+        <button class="btn-action" onclick="copyAllSummary()">複製 全天總結 LINE 訊息</button>
+        <button class="btn-action btn-danger" onclick="clearAllOrders()">清空所有雲端點餐資料</button>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 1rem;">
+        <h4 style="font-size:0.9rem;">店家報餐彙整 (依單數分類)</h4>
+        <div id="filterCategoryTotal" style="font-size:0.85rem; font-weight:bold; color:var(--primary-color);">分類總金額：$0</div>
+      </div>
+      <div style="display:flex; gap:0.3rem; margin-top:0.3rem;">
+        <button class="btn-action" style="flex:1;" onclick="renderAdminSummaryTable('all')">全天總計</button>
+        <button class="btn-action" style="flex:1; background:#8b5cf6;" onclick="renderAdminSummaryTable(1)">僅第 1 單</button>
+        <button class="btn-action" style="flex:1; background:#ec4899;" onclick="renderAdminSummaryTable(2)">僅第 2 單</button>
+        <button class="btn-action" style="flex:1; background:#10b981;" onclick="renderAdminSummaryTable(3)">僅第 3 單</button>
+      </div>
+      <table id="summaryTable">
+        <thead>
+          <tr><th>品項與標記</th><th>單價</th><th>總數量</th><th>小計金額</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <h4 style="margin-top: 1rem; font-size:0.9rem;">個人點餐與取消明細</h4>
+      <table id="detailTable">
+        <thead>
+          <tr><th>姓名 (部門)</th><th>點餐內容 (單別)</th><th>金額</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbw4mBhL2lsGmSFWp52ipVKMmJa4IOS4p1SZIqOHFRDRBCbqFijoQfEDSHiEtEr7kx_f7g/exec";
+
+    // 竹林雞肉菜單資料 (飯類加入半飯、不雞油、加蛋選項)
+    const menuData = [
+      { id: "cat-1", category: "麵類", items: [
+        { name: "竹林辣拌麵", price: 45 },
+        { name: "紹興雞麵", price: 120 }
+      ]},
+      { id: "cat-2", category: "飯類", hasRiceOptions: true, items: [
+        { name: "竹林嫩胸飯 (有一顆蛋)", price: 110 },
+        { name: "雞肉雙拼飯 (有一顆蛋)", price: 125 },
+        { name: "竹林雞腿飯 (有一顆蛋)", price: 130 },
+        { name: "銷魂雞飯 (有一顆蛋)", price: 85 },
+        { name: "百銷 (加量銷魂雞飯) (有一顆蛋)", price: 125 },
+        { name: "雞油飯", price: 15 }
+      ]},
+      { id: "cat-3", category: "湯品", items: [
+        { name: "紹興雞湯", price: 100 },
+        { name: "竹筍雞湯", price: 50 },
+        { name: "下水湯", price: 45 }
+      ]},
+      { id: "cat-4", category: "雞肉切盤", items: [
+        { name: "雞胸切盤", price: 85 },
+        { name: "雞腿切盤 (小份)", price: 100 },
+        { name: "雞腿切盤 (大份)", price: 190 },
+        { name: "雙拼切盤 (小份)", price: 95 },
+        { name: "雙拼切盤 (大份)", price: 180 },
+        { name: "半雞 (附辣椒醬包)", price: 480 },
+        { name: "全雞 (附辣椒醬1瓶)", price: 930 }
+      ]},
+      { id: "cat-5", category: "其它", items: [
+        { name: "老滷雞爪凍", price: 50 },
+        { name: "燙青菜", price: 45 },
+        { name: "燙下水", price: 45 },
+        { name: "荷包蛋", price: 15 },
+        { name: "雞屁股", price: 5 },
+        { name: "冬瓜檸檬", price: 25 },
+        { name: "三叔辣醬", price: 150 }
+      ]}
+    ];
+
+    let currentOrder = {};
+    let globalAllOrders = [];
+    let globalCurrentBatch = 1;
+    let manualOverride = 'auto';
+    let currentAdminPassword = '';
+    let isSubmitting = false; 
+
+    function showLoading(show) {
+      document.getElementById('loadingOverlay').classList.toggle('active', show);
+    }
+
+    async function loadCloudData() {
+      showLoading(true);
+      try {
+        const res = await fetch(`${API_URL}?action=getSystemData`);
+        const data = await res.json();
+        if (data && data.status === 'success') {
+          globalAllOrders = data.orders || [];
+          globalCurrentBatch = Number(data.currentBatch) || 1;
+          manualOverride = data.manualOverride || 'auto';
+          checkDeadline();
+          return true;
+        }
+        return false;
+      } catch (e) {
+        console.error('讀取雲端資料失敗:', e);
+        return false;
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    function checkDeadline() {
+      const banner = document.getElementById('timeBanner');
+      const submitBtn = document.getElementById('btnSubmitOrder');
+      let isClosed = false;
+
+      if (manualOverride === 'open') {
+        banner.className = 'time-banner';
+        banner.innerText = '🟢 【手動強制開啟】測試點餐進行中 (不受時間限制)';
+        isClosed = false;
+      } else if (manualOverride === 'close') {
+        banner.className = 'time-banner closed';
+        banner.innerText = '🔴 【手動強制關閉】目前無法填單';
+        isClosed = true;
+      } else {
+        const now = new Date();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        isClosed = (hours > 10) || (hours === 10 && minutes >= 30);
+
+        if (isClosed) {
+          banner.className = 'time-banner closed';
+          banner.innerText = '⛔ 點餐已截止 (截止時間：上午 10:30)';
+        } else {
+          banner.className = 'time-banner';
+          banner.innerText = '⏳ 點餐截止時間：上午 10:30 (開放點餐中)';
+        }
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = isClosed;
+        submitBtn.innerText = isClosed ? '點餐已截止' : '確認送出點餐';
+      }
+      return isClosed;
+    }
+
+    function switchTab(tab) {
+      if (tab === 'order') {
+        document.getElementById('pageOrder').style.display = 'block';
+        document.getElementById('pageCancel').style.display = 'none';
+        document.getElementById('footerBar').style.display = 'flex';
+        document.getElementById('tabOrder').classList.add('active');
+        document.getElementById('tabCancel').classList.remove('active');
+      } else {
+        document.getElementById('pageOrder').style.display = 'none';
+        document.getElementById('pageCancel').style.display = 'block';
+        document.getElementById('footerBar').style.display = 'none';
+        document.getElementById('tabOrder').classList.remove('active');
+        document.getElementById('tabCancel').classList.add('active');
+      }
+    }
+
+    function renderCategoryNav() {
+      const navContainer = document.getElementById('categoryNav');
+      let html = '';
+      menuData.forEach(cat => {
+        html += `<a class="nav-tag" href="#${cat.id}">${cat.category}</a>`;
+      });
+      navContainer.innerHTML = html;
+    }
+
+    function renderMenu() {
+      const container = document.getElementById('menuList');
+      let html = '';
+
+      menuData.forEach(cat => {
+        html += `<h3 id="${cat.id}" style="font-size:0.9rem; color:var(--primary-color); margin:1.2rem 0 0.5rem; border-bottom:2px solid var(--border-color); padding-bottom:0.3rem; scroll-margin-top: 50px;">${cat.category}</h3>`;
+        cat.items.forEach(item => {
+          const id = item.name;
+          let optionsHtml = '';
+          
+          // 如果是飯類（除了雞油飯以外，名字包含有一顆蛋的）就加上半飯、不雞油、加蛋選項
+          if (cat.hasRiceOptions && item.name !== "雞油飯") {
+            optionsHtml = `
+              <div class="item-options disabled-option" id="options-group-${id}">
+                <label><input type="checkbox" id="opt-halfRice-${id}" onchange="updateDetails('${id}')"> 半飯</label>
+                <label><input type="checkbox" id="opt-noOil-${id}" onchange="updateDetails('${id}')"> 不雞油</label>
+                <label><input type="checkbox" id="opt-addEgg-${id}" onchange="updateDetails('${id}')"> 加蛋 (+15元)</label>
+              </div>
+            `;
+          }
+
+          html += `
+            <div class="menu-item">
+              <div class="item-main">
+                <div class="item-info">
+                  <div class="item-name">${item.name}</div>
+                  <div class="item-price">$${item.price}</div>
+                </div>
+                <div class="quantity-control">
+                  <button class="btn-qty" onclick="updateQty('${id}', -1, ${item.price})">-</button>
+                  <span class="qty-display" id="qty-${id}">0</span>
+                  <button class="btn-qty" onclick="updateQty('${id}', 1, ${item.price})">+</button>
+                </div>
+              </div>
+              ${optionsHtml}
+              <div class="item-remark-input ${cat.hasRiceOptions && item.name !== '雞油飯' ? 'disabled-option' : ''}" id="remark-group-${id}">
+                <input type="text" id="remark-${id}" placeholder="備註（例如：全熟蛋、不要辣...）" oninput="updateDetails('${id}')">
+              </div>
+            </div>
+          `;
+        });
+      });
+      container.innerHTML = html;
+    }
+
+    function updateQty(id, change, price) {
+      if (checkDeadline()) {
+        alert('目前點餐功能已關閉，無法修改餐點！');
+        return;
+      }
+
+      if (!currentOrder[id]) {
+        currentOrder[id] = { qty: 0, price: price, halfRice: false, noOil: false, addEgg: false, remark: '' };
+      }
+      currentOrder[id].qty += change;
+
+      const optGroup = document.getElementById(`options-group-${id}`);
+      const remGroup = document.getElementById(`remark-group-${id}`);
+
+      if (currentOrder[id].qty <= 0) {
+        delete currentOrder[id];
+        document.getElementById(`qty-${id}`).innerText = 0;
+        
+        if (optGroup) optGroup.classList.add('disabled-option');
+        if (remGroup) remGroup.classList.add('disabled-option');
+
+        const halfRiceEl = document.getElementById(`opt-halfRice-${id}`);
+        const noOilEl = document.getElementById(`opt-noOil-${id}`);
+        const addEggEl = document.getElementById(`opt-addEgg-${id}`);
+        const remarkEl = document.getElementById(`remark-${id}`);
+
+        if (halfRiceEl) halfRiceEl.checked = false;
+        if (noOilEl) noOilEl.checked = false;
+        if (addEggEl) addEggEl.checked = false;
+        if (remarkEl) remarkEl.value = '';
+      } else {
+        document.getElementById(`qty-${id}`).innerText = currentOrder[id].qty;
+        if (optGroup) optGroup.classList.remove('disabled-option');
+        if (remGroup) remGroup.classList.remove('disabled-option');
+      }
+      calculateTotal();
+    }
+
+    function updateDetails(id) {
+      if (currentOrder[id]) {
+        const halfRiceEl = document.getElementById(`opt-halfRice-${id}`);
+        const noOilEl = document.getElementById(`opt-noOil-${id}`);
+        const addEggEl = document.getElementById(`opt-addEgg-${id}`);
+        const remarkEl = document.getElementById(`remark-${id}`);
+
+        if (halfRiceEl) currentOrder[id].halfRice = halfRiceEl.checked;
+        if (noOilEl) currentOrder[id].noOil = noOilEl.checked;
+        if (addEggEl) currentOrder[id].addEgg = addEggEl.checked;
+        if (remarkEl) currentOrder[id].remark = remarkEl.value.trim();
+
+        calculateTotal();
+      }
+    }
+
+    function calculateTotal() {
+      let total = 0;
+      for (let key in currentOrder) {
+        let itemPrice = currentOrder[key].price;
+        if (currentOrder[key].addEgg) itemPrice += 15; // 加蛋多 15 元
+        total += currentOrder[key].qty * itemPrice;
+      }
+      document.getElementById('grandTotal').innerText = total;
+    }
+
+    function openConfirmModal() {
+      if (checkDeadline()) {
+        alert('目前點餐功能已關閉，無法送出訂單！');
+        return;
+      }
+
+      const name = document.getElementById('userName').value.trim();
+      const dept = document.getElementById('userDept').value.trim();
+
+      if (!name || !dept) {
+        alert('請填寫姓名與部門！');
+        return;
+      }
+
+      let hasItems = false;
+      let html = '';
+      let total = 0;
+
+      for (let key in currentOrder) {
+        if (currentOrder[key].qty > 0) {
+          hasItems = true;
+          let itemPrice = currentOrder[key].price;
+          if (currentOrder[key].addEgg) itemPrice += 15;
+          let subtotal = currentOrder[key].qty * itemPrice;
+          total += subtotal;
+
+          let opts = [];
+          if (currentOrder[key].halfRice) opts.push('半飯');
+          if (currentOrder[key].noOil) opts.push('不雞油');
+          if (currentOrder[key].addEgg) opts.push('加蛋(+15)');
+          if (currentOrder[key].remark) opts.push(`備註:${currentOrder[key].remark}`);
+          let optStr = opts.length ? ` (${opts.join(', ')})` : '';
+
+          html += `
+            <div class="confirm-summary-item">
+              <strong>${key}</strong> x ${currentOrder[key].qty} 份 $${subtotal}
+              <div style="font-size:0.8rem; color:#6b7280;">${optStr}</div>
+            </div>
+          `;
+        }
+      }
+
+      if (!hasItems) {
+        alert('請至少選擇一項餐點！');
+        return;
+      }
+
+      document.getElementById('confirmUserName').innerText = name;
+      document.getElementById('confirmUserDept').innerText = dept;
+      document.getElementById('confirmSummaryList').innerHTML = html;
+      document.getElementById('confirmGrandTotal').innerText = `$${total}`;
+      
+      document.getElementById('confirmOrderModal').classList.add('active');
+    }
+
+    function closeConfirmModal() {
+      document.getElementById('confirmOrderModal').classList.remove('active');
+    }
+
+    async function submitOrder() {
+      if (isSubmitting) return; 
+      
+      closeConfirmModal();
+
+      const name = document.getElementById('userName').value.trim();
+      const dept = document.getElementById('userDept').value.trim();
+
+      const items = [];
+      let total = 0;
+
+      for (let key in currentOrder) {
+        if (currentOrder[key].qty > 0) {
+          let itemPrice = currentOrder[key].price;
+          if (currentOrder[key].addEgg) itemPrice += 15;
+
+          items.push({
+            name: key,
+            qty: currentOrder[key].qty,
+            price: itemPrice,
+            halfRice: currentOrder[key].halfRice,
+            noOil: currentOrder[key].noOil,
+            addEgg: currentOrder[key].addEgg,
+            remark: currentOrder[key].remark,
+            cancelled: false
+          });
+          total += currentOrder[key].qty * itemPrice;
+        }
+      }
+
+      const orderData = {
+        id: 'ord_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        name, dept, items, total,
+        batch: globalCurrentBatch,
+        cancelled: false,
+        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+      };
+
+      isSubmitting = true;
+      const submitBtn = document.getElementById('btnSubmitOrder');
+      submitBtn.disabled = true;
+      submitBtn.innerText = '寫入雲端中...';
+      showLoading(true);
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'submitOrder', order: orderData })
+        });
+        const result = await res.json();
+        if (result && result.status === 'success') {
+          alert(`點餐成功！資料已寫入雲端（【第 ${globalCurrentBatch} 單】）。`);
+          location.reload();
+        } else {
+          throw new Error(result.message || '伺服器回傳失敗');
+        }
+      } catch (e) {
+        alert('同步雲端失敗，請重新再試。錯誤代碼: ' + e.message);
+        isSubmitting = false;
+        submitBtn.disabled = false;
+        submitBtn.innerText = '確認送出點餐';
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function searchUserOrder() {
+      const name = document.getElementById('cancelName').value.trim();
+      const dept = document.getElementById('cancelDept').value.trim();
+      const resultDiv = document.getElementById('userOrderResult');
+
+      if (!name || !dept) {
+        alert('請輸入姓名與部門！');
+        return;
+      }
+
+      const success = await loadCloudData();
+      if (!success) {
+        alert('網路連線異常，無法取得最新雲端訂單，請稍後再試！');
+        return;
+      }
+
+      const userOrders = globalAllOrders.filter(o => o.name === name && o.dept === dept && !o.cancelled);
+
+      if (userOrders.length === 0) {
+        resultDiv.innerHTML = `<div class="card"><p style="color:#6b7280; text-align:center;">查無 ${dept} - ${name} 的雲端有效訂單。</p></div>`;
+        return;
+      }
+
+      let html = '';
+      userOrders.forEach(order => {
+        let itemsHtml = '';
+        order.items.forEach((item, idx) => {
+          if (!item.cancelled) {
+            let details = [];
+            if (item.halfRice) details.push('半飯');
+            if (item.noOil) details.push('不雞油');
+            if (item.addEgg) details.push('加蛋');
+            if (item.remark) details.push(`備註: ${item.remark}`);
+            let detailStr = details.length ? ` (${details.join(', ')})` : '';
+
+            itemsHtml += `
+              <div style="margin-bottom:0.4rem;">
+                • ${item.name} x ${item.qty} ${detailStr} - $${item.qty * item.price}
+                <button class="cancel-item-btn" onclick="cancelSingleItem('${order.id}', ${idx})">取消此品項</button>
+              </div>
+            `;
+          }
+        });
+
+        html += `
+          <div class="order-card">
+            <div class="order-card-header">
+              <span>第 ${order.batch} 單 (下單時間: ${order.timestamp})</span>
+              <span>小計: $${order.total}</span>
+            </div>
+            ${itemsHtml}
+            <button class="btn-action btn-danger" style="width:100%; margin-top:0.6rem;" onclick="cancelFullOrder('${order.id}')">全部取消此筆訂單</button>
+          </div>
+        `;
+      });
+
+      resultDiv.innerHTML = html;
+    }
+
+    async function cancelSingleItem(orderId, itemIndex) {
+      if (!confirm('確定要取消這個餐點品項嗎？')) return;
+
+      let order = globalAllOrders.find(o => o.id === orderId);
+      if (!order) return;
+
+      let clonedOrder = JSON.parse(JSON.stringify(order));
+      const item = clonedOrder.items[itemIndex];
+      item.cancelled = true;
+      
+      let newTotal = 0;
+      clonedOrder.items.forEach(i => {
+        if (!i.cancelled) {
+          newTotal += i.qty * i.price;
+        }
+      });
+      clonedOrder.total = newTotal;
+
+      if (clonedOrder.items.every(i => i.cancelled)) {
+        clonedOrder.cancelled = true;
+      }
+
+      showLoading(true);
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'updateOrder', orderId, order: clonedOrder })
+        });
+        const result = await res.json();
+        if (result && result.status === 'success') {
+          alert('品項取消成功，已同步雲端！');
+          await searchUserOrder();
+        } else {
+          throw new Error(result.message || '伺服器拒絕更新');
+        }
+      } catch (e) {
+        alert('取消失敗，請稍後再試。錯誤: ' + e.message);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function cancelFullOrder(orderId) {
+      if (!confirm('確定要取消整筆訂單嗎？')) return;
+
+      let order = globalAllOrders.find(o => o.id === orderId);
+      if (!order) return;
+
+      let clonedOrder = JSON.parse(JSON.stringify(order));
+      clonedOrder.cancelled = true;
+      clonedOrder.total = 0;
+      clonedOrder.items.forEach(i => i.cancelled = true);
+
+      showLoading(true);
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'updateOrder', orderId, order: clonedOrder })
+        });
+        const result = await res.json();
+        if (result && result.status === 'success') {
+          alert('整筆訂單取消成功，已同步雲端！');
+          await searchUserOrder();
+        } else {
+          throw new Error(result.message || '伺服器拒絕更新');
+        }
+      } catch (e) {
+        alert('取消失敗，請稍後再試。錯誤: ' + e.message);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    function openAdminModal() {
+      document.getElementById('adminAuthModal').classList.add('active');
+    }
+
+    function closeAdminAuthModal() {
+      document.getElementById('adminAuthModal').classList.remove('active');
+    }
+
+    async function verifyAdminPassword() {
+      const pwd = document.getElementById('adminPasswordInput').value;
+      showLoading(true);
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'adminAction', password: pwd, subAction: 'check' })
+        });
+        const data = await res.json();
+        if (data && data.status === 'success') {
+          currentAdminPassword = pwd;
+          closeAdminAuthModal();
+          document.getElementById('adminPasswordInput').value = '';
+          document.getElementById('adminModal').classList.add('active');
+          loadAdminData();
+        } else {
+          alert('密碼錯誤！');
+        }
+      } catch (e) {
+        alert('驗證失敗！');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    function closeAdminModal() {
+      document.getElementById('adminModal').classList.remove('active');
+    }
+
+    async function setManualOverride(mode) {
+      showLoading(true);
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'adminAction', password: currentAdminPassword, subAction: 'setOverride', value: mode })
+        });
+        const data = await res.json();
+        if(data && data.status === 'success') {
+          await loadAdminData();
+          alert('雲端填單開關設定已更新！');
+        } else {
+          alert('更新失敗: ' + (data.message || '未知錯誤'));
+        }
+      } catch(e) {
+        alert('連線失敗，請檢查網路');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function settleBatch(batchNum) {
+      if (batchNum >= 3) {
+        if (!confirm('【第 3 單】為今日最終批次，結算後將無法再往後增加批次。確定要結算嗎？')) return;
+      } else {
+        if (!confirm(`確定要關閉並結算【第 ${batchNum} 單】嗎？`)) return;
+      }
+
+      showLoading(true);
+      try {
+        const next = batchNum >= 3 ? 3 : batchNum + 1;
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'adminAction', password: currentAdminPassword, subAction: 'settleBatch', nextBatch: next })
+        });
+        const data = await res.json();
+        if(data && data.status === 'success') {
+          await loadAdminData();
+          alert(`已成功結算【第 ${batchNum} 單】！目前設為【第 ${next} 單】。`);
+        } else {
+          alert('結算失敗: ' + (data.message || '未知錯誤'));
+        }
+      } catch(e) {
+        alert('連線失敗');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function loadAdminData() {
+      const success = await loadCloudData();
+      if (!success) {
+        alert('管理員讀取雲端資料失敗');
+        return;
+      }
+
+      const activeOrders = globalAllOrders.filter(o => !o.cancelled);
+      
+      const uniqueUsers = new Set(activeOrders.map(o => `${o.dept}-${o.name}`));
+      document.getElementById('statUsers').innerText = `${uniqueUsers.size} 人`;
+
+      let totalSum = activeOrders.reduce((sum, o) => sum + o.total, 0);
+      document.getElementById('statTotalAmount').innerText = `$${totalSum}`;
+      document.getElementById('statStageStatus').innerText = `目前為第${globalCurrentBatch}單`;
+
+      const statusEl = document.getElementById('adminToggleStatus');
+      if (statusEl) {
+        if (manualOverride === 'open') statusEl.innerText = '🟢 強制開啟中 (測試中)';
+        else if (manualOverride === 'close') statusEl.innerText = '🔴 強制關閉中';
+        else statusEl.innerText = '🔄 自動判定 (依上午 10:30)';
+      }
+
+      renderAdminDetailTable(globalAllOrders);
+      renderAdminSummaryTable('all');
+    }
+
+    function renderAdminSummaryTable(filterBatch) {
+      const summary = {};
+      let filterTotalAmount = 0;
+
+      globalAllOrders.forEach(o => {
+        if (!o.cancelled) {
+          if (filterBatch === 'all' || o.batch === filterBatch) {
+            o.items.forEach(i => {
+              if (!i.cancelled) {
+                let details = [];
+                if (i.halfRice) details.push('半飯');
+                if (i.noOil) details.push('不雞油');
+                if (i.addEgg) details.push('加蛋(+15)');
+                if (i.remark) details.push(`備註: ${i.remark}`);
+                let detailStr = details.length ? ` (${details.join(', ')})` : '';
+
+                const key = `${i.name}${detailStr}`;
+                if (!summary[key]) {
+                  summary[key] = { qty: 0, unitPrice: i.price };
+                }
+                summary[key].qty += i.qty;
+                filterTotalAmount += i.qty * i.price;
+              }
+            });
+          }
+        }
+      });
+
+      document.getElementById('filterCategoryTotal').innerText = `分類總金額：$${filterTotalAmount}`;
+
+      const body = document.querySelector('#summaryTable tbody');
+      body.innerHTML = '';
+      if (Object.keys(summary).length === 0) {
+        body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#9ca3af;">無相關餐點統計</td></tr>';
+      } else {
+        for (let item in summary) {
+          const qty = summary[item].qty;
+          const unitPrice = summary[item].unitPrice;
+          const subtotal = qty * unitPrice;
+          body.innerHTML += `
+            <tr>
+              <td>${item}</td>
+              <td>$${unitPrice}</td>
+              <td><strong>${qty}</strong> 份</td>
+              <td><strong>$${subtotal}</strong></td>
+            </tr>
+          `;
+        }
+      }
+    }
+
+    function renderAdminDetailTable(allOrders) {
+      const body = document.querySelector('#detailTable tbody');
+      body.innerHTML = '';
+
+      allOrders.forEach(o => {
+        let itemsStr = '';
+        if (o.cancelled) {
+          itemsStr = `<span style="color:red; text-decoration:line-through;">[整筆訂單已取消]</span>`;
+        } else {
+          itemsStr = o.items.map(i => {
+            if (i.cancelled) {
+              return `<span style="color:#6b7280; text-decoration:line-through;">${i.name} x${i.qty} (已取消)</span>`;
+            }
+            let details = [];
+            if (i.halfRice) details.push('半飯');
+            if (i.noOil) details.push('不雞油');
+            if (i.addEgg) details.push('加蛋');
+            if (i.remark) details.push(`備註: ${i.remark}`);
+            let detailStr = details.length ? ` (${details.join(',')})` : '';
+
+            return `${i.name} x${i.qty}${detailStr}`;
+          }).join('<br>');
+        }
+
+        body.innerHTML += `
+          <tr>
+            <td>${o.name}<br><small style="color:#6b7280">${o.dept}</small></td>
+            <td>${itemsStr} <br><small style="color:#3b82f6;">[第 ${o.batch} 單 / ${o.timestamp}]</small></td>
+            <td>$${o.total}</td>
+          </tr>
+        `;
+      });
+    }
+
+    function copyBatchSummary(batchNum) {
+      const batchOrders = globalAllOrders.filter(o => !o.cancelled && o.batch === batchNum);
+
+      if (batchOrders.length === 0) {
+        alert(`【第 ${batchNum} 單】目前無有效點餐資料！`);
+        return;
+      }
+
+      let text = `📋 【竹林雞肉(中華店) - 第 ${batchNum} 單報餐統計】\n📞 電話：02-8992-0789\n-------------------\n【店家報餐總計】\n`;
+      const summary = {};
+      let batchTotal = 0;
+
+      batchOrders.forEach(o => {
+        batchTotal += o.total;
+        o.items.forEach(i => {
+          if (!i.cancelled) {
+            let details = [];
+            if (i.halfRice) details.push('半飯');
+            if (i.noOil) details.push('不雞油');
+            if (i.addEgg) details.push('加蛋');
+            if (i.remark) details.push(`備註: ${i.remark}`);
+            let detailStr = details.length ? ` (${details.join(', ')})` : '';
+
+            const key = `${i.name}${detailStr}`;
+            summary[key] = (summary[key] || 0) + i.qty;
+          }
+        });
+      });
+
+      for (let key in summary) {
+        text += `• ${key}：${summary[key]} 份\n`;
+      }
+
+      text += `\n第 ${batchNum} 單總計：${batchOrders.length} 人 / $${batchTotal} 元\n\n【人員點餐清冊】\n`;
+      
+      batchOrders.forEach(o => {
+        let details = o.items.filter(i => !i.cancelled).map(i => {
+          let opts = [];
+          if (i.halfRice) opts.push('半飯');
+          if (i.noOil) opts.push('不雞油');
+          if (i.addEgg) opts.push('加蛋');
+          if (i.remark) opts.push(`備註:${i.remark}`);
+          let optStr = opts.length ? `(${opts.join(',')})` : '';
+          return `${i.name}x${i.qty}${optStr}`;
+        }).join(', ');
+
+        text += `◻ ${o.name}-${o.dept} ｜ $${o.total} ｜ ${details}\n`;
+      });
+
+      navigator.clipboard.writeText(text).then(() => {
+        alert(`已複製 第 ${batchNum} 單 LINE 訊息！`);
+      }).catch(err => {
+        alert('複製失敗，請手動複製。');
+      });
+    }
+
+    function copyAllSummary() {
+      const activeOrders = globalAllOrders.filter(o => !o.cancelled);
+
+      if (activeOrders.length === 0) {
+        alert('目前無點餐資料！');
+        return;
+      }
+
+      let text = "📋 【竹林雞肉(中華店) - 全天總訂購統計】\n📞 電話：02-8992-0789\n-------------------\n【店家總報餐數】\n";
+      const summary = {};
+      let totalAmount = 0;
+
+      activeOrders.forEach(o => {
+        totalAmount += o.total;
+        o.items.forEach(i => {
+          if (!i.cancelled) {
+            let details = [];
+            if (i.halfRice) details.push('半飯');
+            if (i.noOil) details.push('不雞油');
+            if (i.addEgg) details.push('加蛋');
+            if (i.remark) details.push(`備註: ${i.remark}`);
+            let detailStr = details.length ? ` (${details.join(', ')})` : '';
+
+            const key = `${i.name}${detailStr}`;
+            summary[key] = (summary[key] || 0) + i.qty;
+          }
+        });
+      });
+
+      for (let key in summary) {
+        text += `• ${key}：${summary[key]} 份\n`;
+      }
+
+      text += `\n全天總人數：${activeOrders.length} 人\n全天總金額：$${totalAmount} 元\n\n【人員點餐清冊】\n`;
+      
+      activeOrders.forEach(o => {
+        let details = o.items.filter(i => !i.cancelled).map(i => {
+          let opts = [];
+          if (i.halfRice) opts.push('半飯');
+          if (i.noOil) opts.push('不雞油');
+          if (i.addEgg) opts.push('加蛋');
+          if (i.remark) opts.push(`備註:${i.remark}`);
+          let optStr = opts.length ? `(${opts.join(',')})` : '';
+          return `${i.name}x${i.qty}${optStr}`;
+        }).join(', ');
+
+        text += `◻ ${o.name}-${o.dept} ｜ $${o.total} ｜ ${details} [第${o.batch}單]\n`;
+      });
+
+      navigator.clipboard.writeText(text).then(() => {
+        alert('已複製全天總結 LINE 訊息！');
+      }).catch(err => {
+        alert('複製失敗，請手動複製。');
+      });
+    }
+
+    async function clearAllOrders() {
+      if (confirm('確定要清空所有雲端點餐資料嗎？')) {
+        showLoading(true);
+        try {
+          const res = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'adminAction', password: currentAdminPassword, subAction: 'clearAll' })
+          });
+          const data = aliasResToJson(res);
+          if(data && data.status === 'success') {
+            await loadAdminData();
+            alert('雲端點餐資料已全部清空！');
+          } else {
+            alert('清空失敗: ' + (data.message || '未知錯誤'));
+          }
+        } catch(e) {
+          alert('連線失敗');
+        } finally {
+          showLoading(false);
+        }
+      }
+    }
+
+    async function aliasResToJson(res) {
+      return await res.json();
+    }
+
+    window.addEventListener('scroll', function() {
+      const btn = document.getElementById('backToTopBtn');
+      if (window.scrollY > 300) {
+        btn.classList.add('show');
+      } else {
+        btn.classList.remove('show');
+      }
+    });
+
+    renderCategoryNav();
+    renderMenu();
+    loadCloudData();
+  </script>
+</body>
+</html>
