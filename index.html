@@ -302,7 +302,7 @@
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbw4mBhL2lsGmSFWp52ipVKMmJa4IOS4p1SZIqOHFRDRBCbqFijoQfEDSHiEtEr7kx_f7g/exec";
 
-    // 竹林雞肉菜單資料 (飯類加入半飯、不雞油、加蛋選項)
+    // 竹林雞肉菜單資料
     const menuData = [
       { id: "cat-1", category: "麵類", items: [
         { name: "竹林辣拌麵", price: 45 },
@@ -443,13 +443,13 @@
           const id = item.name;
           let optionsHtml = '';
           
-          // 如果是飯類（除了雞油飯以外，名字包含有一顆蛋的）就加上半飯、不雞油、加蛋選項
           if (cat.hasRiceOptions && item.name !== "雞油飯") {
             optionsHtml = `
               <div class="item-options disabled-option" id="options-group-${id}">
                 <label><input type="checkbox" id="opt-halfRice-${id}" onchange="updateDetails('${id}')"> 半飯</label>
                 <label><input type="checkbox" id="opt-noOil-${id}" onchange="updateDetails('${id}')"> 不雞油</label>
-                <label><input type="checkbox" id="opt-addEgg-${id}" onchange="updateDetails('${id}')"> 加蛋 (+15元)</label>
+                <label><input type="checkbox" id="opt-wellDoneEgg-${id}" onchange="updateDetails('${id}')"> 全熟蛋</label>
+                <label><input type="checkbox" id="opt-addEgg-${id}" onchange="updateDetails('${id}')"> 額外加一顆蛋 (+15元)</label>
               </div>
             `;
           }
@@ -469,7 +469,7 @@
               </div>
               ${optionsHtml}
               <div class="item-remark-input ${cat.hasRiceOptions && item.name !== '雞油飯' ? 'disabled-option' : ''}" id="remark-group-${id}">
-                <input type="text" id="remark-${id}" placeholder="備註（例如：全熟蛋、不要辣...）" oninput="updateDetails('${id}')">
+                <input type="text" id="remark-${id}" placeholder="備註" oninput="updateDetails('${id}')">
               </div>
             </div>
           `;
@@ -485,7 +485,7 @@
       }
 
       if (!currentOrder[id]) {
-        currentOrder[id] = { qty: 0, price: price, halfRice: false, noOil: false, addEgg: false, remark: '' };
+        currentOrder[id] = { qty: 0, price: price, halfRice: false, noOil: false, wellDoneEgg: false, addEgg: false, remark: '' };
       }
       currentOrder[id].qty += change;
 
@@ -501,11 +501,13 @@
 
         const halfRiceEl = document.getElementById(`opt-halfRice-${id}`);
         const noOilEl = document.getElementById(`opt-noOil-${id}`);
+        const wellDoneEggEl = document.getElementById(`opt-wellDoneEgg-${id}`);
         const addEggEl = document.getElementById(`opt-addEgg-${id}`);
         const remarkEl = document.getElementById(`remark-${id}`);
 
         if (halfRiceEl) halfRiceEl.checked = false;
         if (noOilEl) noOilEl.checked = false;
+        if (wellDoneEggEl) wellDoneEggEl.checked = false;
         if (addEggEl) addEggEl.checked = false;
         if (remarkEl) remarkEl.value = '';
       } else {
@@ -520,11 +522,13 @@
       if (currentOrder[id]) {
         const halfRiceEl = document.getElementById(`opt-halfRice-${id}`);
         const noOilEl = document.getElementById(`opt-noOil-${id}`);
+        const wellDoneEggEl = document.getElementById(`opt-wellDoneEgg-${id}`);
         const addEggEl = document.getElementById(`opt-addEgg-${id}`);
         const remarkEl = document.getElementById(`remark-${id}`);
 
         if (halfRiceEl) currentOrder[id].halfRice = halfRiceEl.checked;
         if (noOilEl) currentOrder[id].noOil = noOilEl.checked;
+        if (wellDoneEggEl) currentOrder[id].wellDoneEgg = wellDoneEggEl.checked;
         if (addEggEl) currentOrder[id].addEgg = addEggEl.checked;
         if (remarkEl) currentOrder[id].remark = remarkEl.value.trim();
 
@@ -536,7 +540,7 @@
       let total = 0;
       for (let key in currentOrder) {
         let itemPrice = currentOrder[key].price;
-        if (currentOrder[key].addEgg) itemPrice += 15; // 加蛋多 15 元
+        if (currentOrder[key].addEgg) itemPrice += 15;
         total += currentOrder[key].qty * itemPrice;
       }
       document.getElementById('grandTotal').innerText = total;
@@ -571,7 +575,8 @@
           let opts = [];
           if (currentOrder[key].halfRice) opts.push('半飯');
           if (currentOrder[key].noOil) opts.push('不雞油');
-          if (currentOrder[key].addEgg) opts.push('加蛋(+15)');
+          if (currentOrder[key].wellDoneEgg) opts.push('全熟蛋');
+          if (currentOrder[key].addEgg) opts.push('額外加一顆蛋(+15)');
           if (currentOrder[key].remark) opts.push(`備註:${currentOrder[key].remark}`);
           let optStr = opts.length ? ` (${opts.join(', ')})` : '';
 
@@ -623,6 +628,7 @@
             price: itemPrice,
             halfRice: currentOrder[key].halfRice,
             noOil: currentOrder[key].noOil,
+            wellDoneEgg: currentOrder[key].wellDoneEgg,
             addEgg: currentOrder[key].addEgg,
             remark: currentOrder[key].remark,
             cancelled: false
@@ -698,7 +704,8 @@
             let details = [];
             if (item.halfRice) details.push('半飯');
             if (item.noOil) details.push('不雞油');
-            if (item.addEgg) details.push('加蛋');
+            if (item.wellDoneEgg) details.push('全熟蛋');
+            if (item.addEgg) details.push('額外加一顆蛋');
             if (item.remark) details.push(`備註: ${item.remark}`);
             let detailStr = details.length ? ` (${details.join(', ')})` : '';
 
@@ -924,7 +931,8 @@
                 let details = [];
                 if (i.halfRice) details.push('半飯');
                 if (i.noOil) details.push('不雞油');
-                if (i.addEgg) details.push('加蛋(+15)');
+                if (i.wellDoneEgg) details.push('全熟蛋');
+                if (i.addEgg) details.push('額外加一顆蛋(+15)');
                 if (i.remark) details.push(`備註: ${i.remark}`);
                 let detailStr = details.length ? ` (${details.join(', ')})` : '';
 
@@ -979,7 +987,8 @@
             let details = [];
             if (i.halfRice) details.push('半飯');
             if (i.noOil) details.push('不雞油');
-            if (i.addEgg) details.push('加蛋');
+            if (i.wellDoneEgg) details.push('全熟蛋');
+            if (i.addEgg) details.push('額外加一顆蛋');
             if (i.remark) details.push(`備註: ${i.remark}`);
             let detailStr = details.length ? ` (${details.join(',')})` : '';
 
@@ -1016,7 +1025,8 @@
             let details = [];
             if (i.halfRice) details.push('半飯');
             if (i.noOil) details.push('不雞油');
-            if (i.addEgg) details.push('加蛋');
+            if (i.wellDoneEgg) details.push('全熟蛋');
+            if (i.addEgg) details.push('額外加一顆蛋');
             if (i.remark) details.push(`備註: ${i.remark}`);
             let detailStr = details.length ? ` (${details.join(', ')})` : '';
 
@@ -1037,7 +1047,8 @@
           let opts = [];
           if (i.halfRice) opts.push('半飯');
           if (i.noOil) opts.push('不雞油');
-          if (i.addEgg) opts.push('加蛋');
+          if (i.wellDoneEgg) opts.push('全熟蛋');
+          if (i.addEgg) opts.push('額外加一顆蛋');
           if (i.remark) opts.push(`備註:${i.remark}`);
           let optStr = opts.length ? `(${opts.join(',')})` : '';
           return `${i.name}x${i.qty}${optStr}`;
@@ -1072,7 +1083,8 @@
             let details = [];
             if (i.halfRice) details.push('半飯');
             if (i.noOil) details.push('不雞油');
-            if (i.addEgg) details.push('加蛋');
+            if (i.wellDoneEgg) details.push('全熟蛋');
+            if (i.addEgg) details.push('額外加一顆蛋');
             if (i.remark) details.push(`備註: ${i.remark}`);
             let detailStr = details.length ? ` (${details.join(', ')})` : '';
 
@@ -1093,7 +1105,8 @@
           let opts = [];
           if (i.halfRice) opts.push('半飯');
           if (i.noOil) opts.push('不雞油');
-          if (i.addEgg) opts.push('加蛋');
+          if (i.wellDoneEgg) opts.push('全熟蛋');
+          if (i.addEgg) opts.push('額外加一顆蛋');
           if (i.remark) opts.push(`備註:${i.remark}`);
           let optStr = opts.length ? `(${opts.join(',')})` : '';
           return `${i.name}x${i.qty}${optStr}`;
@@ -1117,7 +1130,7 @@
             method: 'POST',
             body: JSON.stringify({ action: 'adminAction', password: currentAdminPassword, subAction: 'clearAll' })
           });
-          const data = aliasResToJson(res);
+          const data = await res.json();
           if(data && data.status === 'success') {
             await loadAdminData();
             alert('雲端點餐資料已全部清空！');
@@ -1130,10 +1143,6 @@
           showLoading(false);
         }
       }
-    }
-
-    async function aliasResToJson(res) {
-      return await res.json();
     }
 
     window.addEventListener('scroll', function() {
