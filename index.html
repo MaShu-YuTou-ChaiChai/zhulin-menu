@@ -302,7 +302,7 @@
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbw4mBhL2lsGmSFWp52ipVKMmJa4IOS4p1SZIqOHFRDRBCbqFijoQfEDSHiEtEr7kx_f7g/exec";
 
-    // 竹林雞肉菜單資料 (在雞油飯上方新增「全菜不飯」與「菜飯」)
+    // 竹林雞肉菜單資料
     const menuData = [
       { id: "cat-1", category: "麵類", items: [
         { name: "竹林辣拌麵", price: 45 },
@@ -314,8 +314,8 @@
         { name: "竹林雞腿飯 (有一顆蛋)", price: 130 },
         { name: "銷魂雞飯 (有一顆蛋)", price: 85 },
         { name: "百銷 (加量銷魂雞飯) (有一顆蛋)", price: 125 },
-        { name: "全菜不飯", price: 85, hideNoOil: true },
-        { name: "菜飯", price: 85, hideNoOil: true },
+        { name: "全菜不飯", price: 85, optType: "allVeg" },
+        { name: "菜飯", price: 85, optType: "vegRice" },
         { name: "雞油飯", price: 15 }
       ]},
       { id: "cat-3", category: "湯品", items: [
@@ -446,16 +446,34 @@
           let optionsHtml = '';
           
           if (cat.hasRiceOptions && item.name !== "雞油飯") {
-            const noOilOption = item.hideNoOil ? '' : `<label><input type="checkbox" id="opt-noOil-${id}" onchange="updateDetails('${id}')"> 不雞油</label>`;
-
-            optionsHtml = `
-              <div class="item-options disabled-option" id="options-group-${id}">
-                <label><input type="checkbox" id="opt-halfRice-${id}" onchange="updateDetails('${id}')"> 半飯</label>
-                ${noOilOption}
-                <label><input type="checkbox" id="opt-wellDoneEgg-${id}" onchange="updateDetails('${id}')"> 全熟蛋</label>
-                <label><input type="checkbox" id="opt-addEgg-${id}" onchange="updateDetails('${id}')"> 額外加一顆蛋 (+15元)</label>
-              </div>
-            `;
+            if (item.optType === "allVeg") {
+              // 全菜不飯的專屬選項
+              optionsHtml = `
+                <div class="item-options disabled-option" id="options-group-${id}">
+                  <label><input type="checkbox" id="opt-softEgg-${id}" onchange="updateDetails('${id}')"> 加半熟蛋 (+15元)</label>
+                  <label><input type="checkbox" id="opt-addEgg-${id}" onchange="updateDetails('${id}')"> 加全熟蛋 (+15元)</label>
+                </div>
+              `;
+            } else if (item.optType === "vegRice") {
+              // 菜飯的專屬選項
+              optionsHtml = `
+                <div class="item-options disabled-option" id="options-group-${id}">
+                  <label><input type="checkbox" id="opt-halfRice-${id}" onchange="updateDetails('${id}')"> 半飯</label>
+                  <label><input type="checkbox" id="opt-softEgg-${id}" onchange="updateDetails('${id}')"> 加半熟蛋 (+15元)</label>
+                  <label><input type="checkbox" id="opt-addEgg-${id}" onchange="updateDetails('${id}')"> 加全熟蛋 (+15元)</label>
+                </div>
+              `;
+            } else {
+              // 一般飯類預設選項
+              optionsHtml = `
+                <div class="item-options disabled-option" id="options-group-${id}">
+                  <label><input type="checkbox" id="opt-halfRice-${id}" onchange="updateDetails('${id}')"> 半飯</label>
+                  <label><input type="checkbox" id="opt-noOil-${id}" onchange="updateDetails('${id}')"> 不雞油</label>
+                  <label><input type="checkbox" id="opt-wellDoneEgg-${id}" onchange="updateDetails('${id}')"> 全熟蛋</label>
+                  <label><input type="checkbox" id="opt-addEgg-${id}" onchange="updateDetails('${id}')"> 額外加一顆蛋 (+15元)</label>
+                </div>
+              `;
+            }
           }
 
           html += `
@@ -489,7 +507,7 @@
       }
 
       if (!currentOrder[id]) {
-        currentOrder[id] = { qty: 0, price: price, halfRice: false, noOil: false, wellDoneEgg: false, addEgg: false, remark: '' };
+        currentOrder[id] = { qty: 0, price: price, halfRice: false, noOil: false, wellDoneEgg: false, softEgg: false, addEgg: false, remark: '' };
       }
       currentOrder[id].qty += change;
 
@@ -506,12 +524,14 @@
         const halfRiceEl = document.getElementById(`opt-halfRice-${id}`);
         const noOilEl = document.getElementById(`opt-noOil-${id}`);
         const wellDoneEggEl = document.getElementById(`opt-wellDoneEgg-${id}`);
+        const softEggEl = document.getElementById(`opt-softEgg-${id}`);
         const addEggEl = document.getElementById(`opt-addEgg-${id}`);
         const remarkEl = document.getElementById(`remark-${id}`);
 
         if (halfRiceEl) halfRiceEl.checked = false;
         if (noOilEl) noOilEl.checked = false;
         if (wellDoneEggEl) wellDoneEggEl.checked = false;
+        if (softEggEl) softEggEl.checked = false;
         if (addEggEl) addEggEl.checked = false;
         if (remarkEl) remarkEl.value = '';
       } else {
@@ -527,12 +547,14 @@
         const halfRiceEl = document.getElementById(`opt-halfRice-${id}`);
         const noOilEl = document.getElementById(`opt-noOil-${id}`);
         const wellDoneEggEl = document.getElementById(`opt-wellDoneEgg-${id}`);
+        const softEggEl = document.getElementById(`opt-softEgg-${id}`);
         const addEggEl = document.getElementById(`opt-addEgg-${id}`);
         const remarkEl = document.getElementById(`remark-${id}`);
 
         if (halfRiceEl) currentOrder[id].halfRice = halfRiceEl.checked;
         if (noOilEl) currentOrder[id].noOil = noOilEl.checked;
         if (wellDoneEggEl) currentOrder[id].wellDoneEgg = wellDoneEggEl.checked;
+        if (softEggEl) currentOrder[id].softEgg = softEggEl.checked;
         if (addEggEl) currentOrder[id].addEgg = addEggEl.checked;
         if (remarkEl) currentOrder[id].remark = remarkEl.value.trim();
 
@@ -544,6 +566,7 @@
       let total = 0;
       for (let key in currentOrder) {
         let itemPrice = currentOrder[key].price;
+        if (currentOrder[key].softEgg) itemPrice += 15;
         if (currentOrder[key].addEgg) itemPrice += 15;
         total += currentOrder[key].qty * itemPrice;
       }
@@ -572,6 +595,7 @@
         if (currentOrder[key].qty > 0) {
           hasItems = true;
           let itemPrice = currentOrder[key].price;
+          if (currentOrder[key].softEgg) itemPrice += 15;
           if (currentOrder[key].addEgg) itemPrice += 15;
           let subtotal = currentOrder[key].qty * itemPrice;
           total += subtotal;
@@ -580,7 +604,8 @@
           if (currentOrder[key].halfRice) opts.push('半飯');
           if (currentOrder[key].noOil) opts.push('不雞油');
           if (currentOrder[key].wellDoneEgg) opts.push('全熟蛋');
-          if (currentOrder[key].addEgg) opts.push('額外加一顆蛋(+15)');
+          if (currentOrder[key].softEgg) opts.push('加半熟蛋(+15)');
+          if (currentOrder[key].addEgg) opts.push(key === '全菜不飯' || key === '菜飯' ? '加全熟蛋(+15)' : '額外加一顆蛋(+15)');
           if (currentOrder[key].remark) opts.push(`備註:${currentOrder[key].remark}`);
           let optStr = opts.length ? ` (${opts.join(', ')})` : '';
 
@@ -624,6 +649,7 @@
       for (let key in currentOrder) {
         if (currentOrder[key].qty > 0) {
           let itemPrice = currentOrder[key].price;
+          if (currentOrder[key].softEgg) itemPrice += 15;
           if (currentOrder[key].addEgg) itemPrice += 15;
 
           items.push({
@@ -633,6 +659,7 @@
             halfRice: currentOrder[key].halfRice,
             noOil: currentOrder[key].noOil,
             wellDoneEgg: currentOrder[key].wellDoneEgg,
+            softEgg: currentOrder[key].softEgg,
             addEgg: currentOrder[key].addEgg,
             remark: currentOrder[key].remark,
             cancelled: false
@@ -709,7 +736,8 @@
             if (item.halfRice) details.push('半飯');
             if (item.noOil) details.push('不雞油');
             if (item.wellDoneEgg) details.push('全熟蛋');
-            if (item.addEgg) details.push('額外加一顆蛋');
+            if (item.softEgg) details.push('加半熟蛋');
+            if (item.addEgg) details.push(item.name === '全菜不飯' || item.name === '菜飯' ? '加全熟蛋' : '額外加一顆蛋');
             if (item.remark) details.push(`備註: ${item.remark}`);
             let detailStr = details.length ? ` (${details.join(', ')})` : '';
 
@@ -936,7 +964,8 @@
                 if (i.halfRice) details.push('半飯');
                 if (i.noOil) details.push('不雞油');
                 if (i.wellDoneEgg) details.push('全熟蛋');
-                if (i.addEgg) details.push('額外加一顆蛋(+15)');
+                if (i.softEgg) details.push('加半熟蛋(+15)');
+                if (i.addEgg) details.push(i.name === '全菜不飯' || i.name === '菜飯' ? '加全熟蛋(+15)' : '額外加一顆蛋(+15)');
                 if (i.remark) details.push(`備註: ${i.remark}`);
                 let detailStr = details.length ? ` (${details.join(', ')})` : '';
 
@@ -992,7 +1021,8 @@
             if (i.halfRice) details.push('半飯');
             if (i.noOil) details.push('不雞油');
             if (i.wellDoneEgg) details.push('全熟蛋');
-            if (i.addEgg) details.push('額外加一顆蛋');
+            if (i.softEgg) details.push('加半熟蛋');
+            if (i.addEgg) details.push(i.name === '全菜不飯' || i.name === '菜飯' ? '加全熟蛋' : '額外加一顆蛋');
             if (i.remark) details.push(`備註: ${i.remark}`);
             let detailStr = details.length ? ` (${details.join(',')})` : '';
 
@@ -1030,7 +1060,8 @@
             if (i.halfRice) details.push('半飯');
             if (i.noOil) details.push('不雞油');
             if (i.wellDoneEgg) details.push('全熟蛋');
-            if (i.addEgg) details.push('額外加一顆蛋');
+            if (i.softEgg) details.push('加半熟蛋');
+            if (i.addEgg) details.push(i.name === '全菜不飯' || i.name === '菜飯' ? '加全熟蛋' : '額外加一顆蛋');
             if (i.remark) details.push(`備註: ${i.remark}`);
             let detailStr = details.length ? ` (${details.join(', ')})` : '';
 
@@ -1052,7 +1083,8 @@
           if (i.halfRice) opts.push('半飯');
           if (i.noOil) opts.push('不雞油');
           if (i.wellDoneEgg) opts.push('全熟蛋');
-          if (i.addEgg) opts.push('額外加一顆蛋');
+          if (i.softEgg) opts.push('加半熟蛋');
+          if (i.addEgg) opts.push(i.name === '全菜不飯' || i.name === '菜飯' ? '加全熟蛋' : '額外加一顆蛋');
           if (i.remark) opts.push(`備註:${i.remark}`);
           let optStr = opts.length ? `(${opts.join(',')})` : '';
           return `${i.name}x${i.qty}${optStr}`;
@@ -1088,7 +1120,8 @@
             if (i.halfRice) details.push('半飯');
             if (i.noOil) details.push('不雞油');
             if (i.wellDoneEgg) details.push('全熟蛋');
-            if (i.addEgg) details.push('額外加一顆蛋');
+            if (i.softEgg) details.push('加半熟蛋');
+            if (i.addEgg) details.push(i.name === '全菜不飯' || i.name === '菜飯' ? '加全熟蛋' : '額外加一顆蛋');
             if (i.remark) details.push(`備註: ${i.remark}`);
             let detailStr = details.length ? ` (${details.join(', ')})` : '';
 
@@ -1110,7 +1143,8 @@
           if (i.halfRice) opts.push('半飯');
           if (i.noOil) opts.push('不雞油');
           if (i.wellDoneEgg) opts.push('全熟蛋');
-          if (i.addEgg) opts.push('額外加一顆蛋');
+          if (i.softEgg) opts.push('加半熟蛋');
+          if (i.addEgg) opts.push(i.name === '全菜不飯' || i.name === '菜飯' ? '加全熟蛋' : '額外加一顆蛋');
           if (i.remark) opts.push(`備註:${i.remark}`);
           let optStr = opts.length ? `(${opts.join(',')})` : '';
           return `${i.name}x${i.qty}${optStr}`;
