@@ -6,8 +6,8 @@
   <title>竹林雞肉(中華店) - 同事線上點餐系統 (完整防呆版)</title>
   <style>
     :root {
-      --primary-color: #d97706;
-      --primary-hover: #b45309;
+      --primary-color: #0284c7;
+      --primary-hover: #0369a1;
       --bg-color: #f3f4f6;
       --card-bg: #ffffff;
       --text-color: #1f2937;
@@ -27,10 +27,12 @@
     html { scroll-behavior: smooth; }
     body { background-color: var(--bg-color); color: var(--text-color); padding-bottom: 90px; }
     
-    .header { background-color: var(--primary-color); color: white; padding: 1rem; text-align: center; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .header h1 { font-size: 1.3rem; margin-bottom: 0.2rem; }
-    .header .store-info { font-size: 0.9rem; font-weight: bold; margin-top: 0.1rem; opacity: 0.95; }
-    .admin-btn { position: absolute; right: 1rem; top: 0.8rem; background: rgba(255,255,255,0.2); color: white; border: 1px solid white; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer; }
+    .header { background-color: var(--primary-color); color: white; padding: 0.8rem 1rem; text-align: center; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; }
+    .header-logo { height: 32px; width: auto; position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); background: white; padding: 3px; border-radius: 6px; }
+    .header-title-box { text-align: center; }
+    .header h1 { font-size: 1.3rem; margin-bottom: 0.1rem; }
+    .header .store-info { font-size: 0.85rem; font-weight: bold; opacity: 0.95; }
+    .admin-btn { position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.2); color: white; border: 1px solid white; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer; }
     
     .category-nav { display: flex; overflow-x: auto; white-space: nowrap; background: white; padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 90; box-shadow: 0 2px 4px rgba(0,0,0,0.05); gap: 0.4rem; }
     .category-nav::-webkit-scrollbar { height: 4px; }
@@ -46,7 +48,7 @@
     .card { background: var(--card-bg); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     .card h2 { font-size: 1.05rem; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem; }
     
-    .time-banner { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 0.6rem 1rem; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1rem; text-align: center; font-weight: bold; }
+    .time-banner { background: #f0f9ff; border: 1px solid #bae6fd; color: #0369a1; padding: 0.6rem 1rem; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1rem; text-align: center; font-weight: bold; }
     .time-banner.closed { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
 
     .form-group { margin-bottom: 0.8rem; }
@@ -95,7 +97,7 @@
     .btn-submit { background: var(--primary-color); color: white; border: none; padding: 0.7rem 1.4rem; border-radius: 6px; font-weight: bold; font-size: 0.95rem; cursor: pointer; }
     .btn-submit:disabled { background: #9ca3af; cursor: not-allowed; }
 
-    .back-to-top { position: fixed; bottom: 85px; right: 20px; background: rgba(217, 119, 6, 0.9); color: white; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.15); z-index: 99; transition: opacity 0.3s, background 0.2s; opacity: 0; pointer-events: none; }
+    .back-to-top { position: fixed; bottom: 85px; right: 20px; background: rgba(2, 132, 199, 0.9); color: white; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.15); z-index: 99; transition: opacity 0.3s, background 0.2s; opacity: 0; pointer-events: none; }
     .back-to-top.show { opacity: 1; pointer-events: auto; }
 
     .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 1rem; }
@@ -112,7 +114,7 @@
     table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.8rem; }
     th, td { border: 1px solid var(--border-color); padding: 0.4rem; text-align: left; }
     th { background: #f9fafb; }
-    .btn-action { background: #3b82f6; color: white; border: none; padding: 0.4rem 0.6rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; margin-right: 0.3rem; margin-top: 0.4rem; }
+    .btn-action { background: #0284c7; color: white; border: none; padding: 0.4rem 0.6rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; margin-right: 0.3rem; margin-top: 0.4rem; }
     .btn-danger { background: var(--danger-color); }
     .btn-success { background: var(--success-color); }
 
@@ -132,8 +134,11 @@
   <div class="loading-overlay" id="loadingOverlay">☁️ 雲端資料同步中，請稍候...</div>
 
   <div class="header">
-    <h1>竹林雞肉 (中華店)</h1>
-    <div class="store-info">📞 訂餐電話：02-8992-0789</div>
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAABCCAMAAACc189YAAAAG1BMVEUAAAAAYL4AZL4Aab4Aar4Abr4Ab74AcL4Acb773vGFAAAABHRSTlMA////AGv8J2QAAAA7SURBVEjH7dExEQAgEAShUfSvhBUI/CoIipI9e7fMAt89s7Ie5qf5Kf4s/ix+LP4s/iz+LP4s/mzsAgUYAQyE7zO3AAAAAElFTkSuQmCC" class="header-logo" alt="Logo">
+    <div class="header-title-box">
+      <h1>竹林雞肉 (中華店)</h1>
+      <div class="store-info">📞 訂餐電話：02-8992-0789</div>
+    </div>
     <button class="admin-btn" onclick="openAdminModal()">管理員</button>
   </div>
 
@@ -237,9 +242,9 @@
         <button class="close-btn" onclick="closeAdminModal()">&times;</button>
       </div>
       
-      <div style="margin-bottom: 1rem; background:#fef3c7; border:1px solid #f59e0b; padding:0.8rem; border-radius:6px;">
-        <div style="font-weight:bold; font-size:0.9rem; margin-bottom:0.4rem; color:#b45309;">🛠️ 測試與填單開關控制：</div>
-        <div style="font-size:0.8rem; color:#78350f; margin-bottom:0.5rem;">當前雲端狀態：<span id="adminToggleStatus" style="font-weight:bold;">檢查中...</span></div>
+      <div style="margin-bottom: 1rem; background:#f0f9ff; border:1px solid #7dd3fc; padding:0.8rem; border-radius:6px;">
+        <div style="font-weight:bold; font-size:0.9rem; margin-bottom:0.4rem; color:#0369a1;">🛠️ 測試與填單開關控制：</div>
+        <div style="font-size:0.8rem; color:#0c4a6e; margin-bottom:0.5rem;">當前雲端狀態：<span id="adminToggleStatus" style="font-weight:bold;">檢查中...</span></div>
         <button class="btn-action btn-success" onclick="setManualOverride('open')">🟢 強制開啟填單 (測試用)</button>
         <button class="btn-action btn-danger" onclick="setManualOverride('close')">🔴 強制關閉填單</button>
         <button class="btn-action" style="background:#6b7280;" onclick="setManualOverride('auto')">🔄 恢復依 10:30 自動判定</button>
@@ -256,7 +261,7 @@
         </div>
         <div class="stat-box">
           <div>結算狀態</div>
-          <div id="statStageStatus" style="font-size:0.85rem; color:#d97706;">第1單進行中</div>
+          <div id="statStageStatus" style="font-size:0.85rem; color:#0284c7;">第1單進行中</div>
         </div>
       </div>
 
@@ -447,7 +452,6 @@
           
           if (cat.hasRiceOptions && item.name !== "雞油飯") {
             if (item.optType === "allVeg") {
-              // 全菜不飯的專屬選項
               optionsHtml = `
                 <div class="item-options disabled-option" id="options-group-${id}">
                   <label><input type="checkbox" id="opt-softEgg-${id}" onchange="updateDetails('${id}')"> 加半熟蛋 (+15元)</label>
@@ -455,7 +459,6 @@
                 </div>
               `;
             } else if (item.optType === "vegRice") {
-              // 菜飯的專屬選項
               optionsHtml = `
                 <div class="item-options disabled-option" id="options-group-${id}">
                   <label><input type="checkbox" id="opt-halfRice-${id}" onchange="updateDetails('${id}')"> 半飯</label>
@@ -464,7 +467,6 @@
                 </div>
               `;
             } else {
-              // 一般飯類預設選項
               optionsHtml = `
                 <div class="item-options disabled-option" id="options-group-${id}">
                   <label><input type="checkbox" id="opt-halfRice-${id}" onchange="updateDetails('${id}')"> 半飯</label>
